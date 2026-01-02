@@ -146,15 +146,77 @@ socket.on('user-disconnected', (userId) => {
     }
 });
 
-// UI Interactions
+// UI Interactions - Sidebar Toggle
 const toggleBtn = document.getElementById('sidebar-toggle');
+const sidebar = document.querySelector('.sidebar');
 const mainContainer = document.querySelector('main');
 
-toggleBtn.addEventListener('click', () => {
-    mainContainer.classList.toggle('sidebar-collapsed');
+// Desktop toggle functionality
+if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+        mainContainer.classList.toggle('sidebar-collapsed');
+        setTimeout(() => map.invalidateSize(), 400);
+    });
+}
 
-    // Wait for transition to finish then resize map
-    setTimeout(() => {
+// Mobile interaction - Simple tap to toggle
+const isMobile = () => window.innerWidth <= 768;
+
+if (sidebar) {
+    const sidebarHeader = sidebar.querySelector('.sidebar-header');
+
+    if (sidebarHeader) {
+        // Simple click/tap handler
+        sidebarHeader.addEventListener('click', (e) => {
+            console.log('Header clicked, isMobile:', isMobile());
+            if (!isMobile()) return;
+
+            const wasExpanded = sidebar.classList.contains('expanded');
+            sidebar.classList.toggle('expanded');
+            console.log('Toggled sidebar, now expanded:', !wasExpanded);
+
+            setTimeout(() => map.invalidateSize(), 400);
+        });
+
+        // Touch handler for better mobile support
+        let touchStartTime = 0;
+
+        sidebarHeader.addEventListener('touchstart', (e) => {
+            touchStartTime = Date.now();
+        }, { passive: true });
+
+        sidebarHeader.addEventListener('touchend', (e) => {
+            const touchDuration = Date.now() - touchStartTime;
+
+            // Only trigger if it was a quick tap (not a long press or scroll)
+            if (touchDuration < 300 && isMobile()) {
+                e.preventDefault();
+                sidebar.classList.toggle('expanded');
+                console.log('Touch toggle, expanded:', sidebar.classList.contains('expanded'));
+                setTimeout(() => map.invalidateSize(), 400);
+            }
+        });
+    }
+}
+
+// Initialize state
+function initializeSidebarState() {
+    if (isMobile()) {
+        sidebar.classList.remove('expanded'); // Start collapsed on mobile
+    } else {
+        mainContainer.classList.remove('sidebar-collapsed'); // Start open on desktop
+    }
+    setTimeout(() => map.invalidateSize(), 100);
+}
+
+initializeSidebarState();
+
+// Handle window resize
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        initializeSidebarState();
         map.invalidateSize();
-    }, 300);
+    }, 200);
 });
