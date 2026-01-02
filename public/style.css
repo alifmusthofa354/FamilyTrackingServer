@@ -26,21 +26,30 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
+    position: relative;
+    overflow: hidden;
+    /* Prevent body scroll */
 }
 
+/* Header Styles */
 header {
     background-color: var(--card-bg);
     padding: 1rem 2rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
     justify-content: space-between;
     align-items: center;
     z-index: 1000;
+    flex-shrink: 0;
+    /* Prevent header from shrinking */
 }
 
 header h1 {
     font-size: 1.5rem;
     color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .status-bar {
@@ -72,6 +81,7 @@ header h1 {
     background-color: #e74c3c;
 }
 
+/* Main Layout */
 main {
     flex: 1;
     display: flex;
@@ -86,12 +96,14 @@ main {
 }
 
 .sidebar {
-    width: 300px;
+    width: 320px;
     background-color: var(--card-bg);
-    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
     padding: 1rem;
     overflow-y: auto;
     z-index: 2;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar h2 {
@@ -99,10 +111,13 @@ main {
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
     border-bottom: 2px solid var(--bg-color);
+    color: var(--secondary-color);
 }
 
 #user-list {
     list-style: none;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .user-item {
@@ -111,17 +126,20 @@ main {
     border-radius: 8px;
     margin-bottom: 0.8rem;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s ease;
     border-left: 4px solid var(--primary-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .user-item:hover {
     transform: translateX(5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .user-item h3 {
     font-size: 1rem;
     margin-bottom: 0.3rem;
+    color: var(--secondary-color);
 }
 
 .user-item p {
@@ -134,4 +152,66 @@ main {
     font-style: italic;
     text-align: center;
     margin-top: 2rem;
+}
+
+/* --- Responsive Design --- */
+
+@media (max-width: 768px) {
+
+    /* Adjust Header for Mobile */
+    header {
+        padding: 0.8rem 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+
+    header h1 {
+        font-size: 1.2rem;
+    }
+
+    .status-bar {
+        width: 100%;
+        justify-content: space-between;
+        font-size: 0.8rem;
+    }
+
+    /* Stack Map and Sidebar vertically */
+    main {
+        flex-direction: column;
+    }
+
+    #map {
+        flex: 1;
+        /* Map takes remaining space */
+        min-height: 50vh;
+        /* Ensure map is always significant */
+    }
+
+    .sidebar {
+        width: 100%;
+        /* Full width */
+        height: 35vh;
+        /* Fixed height at bottom */
+        min-height: 200px;
+        box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+        /* Shadow facing up */
+        flex: none;
+        /* Don't grow/shrink based on flex, respect height */
+        border-radius: 15px 15px 0 0;
+        /* Rounded top corners */
+        padding: 1rem 1.5rem;
+    }
+
+    /* Make list items more compact on mobile */
+    .user-item {
+        padding: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .sidebar h2 {
+        font-size: 1rem;
+        margin-bottom: 0.8rem;
+        text-align: center;
+    }
 }
