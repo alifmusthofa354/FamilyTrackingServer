@@ -37,15 +37,20 @@ function updateMarker(data) {
         // Move existing marker
         markers[id].setLatLng([lat, lng]);
         markers[id].bindPopup(`<b>${name}</b><br>Updated: ${new Date(timestamp).toLocaleTimeString()}`);
-
-        // Optional: specific behavior if popup is already open?
-        // if (markers[id].isPopupOpen()) markers[id].openPopup(); 
     } else {
         // Create new marker
         const marker = L.marker([lat, lng])
             .addTo(map)
             .bindPopup(`<b>${name}</b><br>Active Now`);
         markers[id] = marker;
+    }
+}
+
+// Remove Marker
+function removeMarker(userId) {
+    if (markers[userId]) {
+        map.removeLayer(markers[userId]);
+        delete markers[userId];
     }
 }
 
@@ -82,7 +87,14 @@ function renderUserList() {
 
 // 1. Initial Load of all users
 socket.on('current-users', (users) => {
+    // Clear existing data first
+    for (const userId in localUserData) delete localUserData[userId];
     Object.assign(localUserData, users);
+
+    // Clear existing markers not in new list (tricky, better to just wipe or sync)
+    Object.keys(markers).forEach(id => {
+        if (!users[id]) removeMarker(id);
+    });
 
     // Update map markers
     Object.values(users).forEach(user => updateMarker(user));
@@ -94,13 +106,17 @@ socket.on('current-users', (users) => {
 // 2. Real-time updates
 socket.on('receive-location', (data) => {
     console.log('Received location:', data);
-
-    // Update local data store
     localUserData[data.id] = data;
-
-    // Update map marker
     updateMarker(data);
-
-    // Update sidebar
     renderUserList();
+});
+
+// 3. Handle User Disconnect
+socket.on('user-disconnected', (userId) => {
+    console.log('User disconnected:', userId);
+    if (localUserData[userId]) {
+        delete localUserData[userId];
+        removeMarker(userId);
+        renderUserList();
+    }
 });

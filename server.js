@@ -54,11 +54,16 @@ io.on('connection', (socket) => {
     // Handle disconnect
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
-        // Optional: Remove user from list or mark as offline
-        // For now, we keep the last known location but we could remove it locally if needed
-        // const userId = Object.keys(users).find(key => users[key].socketId === socket.id);
-        // if (userId) delete users[userId];
-        // io.emit('user-disconnected', userId);
+
+        // Find the user associated with this socket
+        const userId = Object.keys(users).find(key => users[key].socketId === socket.id);
+
+        if (userId) {
+            console.log(`User ${users[userId].name} (${userId}) went offline.`);
+            delete users[userId];
+            // Notify clients to remove this user
+            io.emit('user-disconnected', userId);
+        }
     });
 });
 
