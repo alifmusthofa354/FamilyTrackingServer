@@ -2,7 +2,14 @@ const socket = io();
 
 // Initialize Map
 // Default view: Indonesia (approximate center)
-const map = L.map('map').setView([-2.5489, 118.0149], 5);
+const map = L.map('map', {
+    zoomControl: false // We'll add it manually in the position we want
+}).setView([-2.5489, 118.0149], 5);
+
+// Add zoom control to bottom-right
+L.control.zoom({
+    position: 'bottomright'
+}).addTo(map);
 
 // Use CartoDB Voyager tiles for a more modern, premium look that matches the UI
 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -147,14 +154,23 @@ socket.on('user-disconnected', (userId) => {
 });
 
 // UI Interactions - Sidebar Toggle
-const toggleBtn = document.getElementById('sidebar-toggle');
 const sidebar = document.querySelector('.sidebar');
 const mainContainer = document.querySelector('main');
 
 // Desktop toggle functionality
-if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => {
-        mainContainer.classList.toggle('sidebar-collapsed');
+const openBtn = document.getElementById('sidebar-open');
+const closeBtn = document.getElementById('sidebar-close');
+
+if (openBtn) {
+    openBtn.addEventListener('click', () => {
+        mainContainer.classList.remove('sidebar-collapsed');
+        setTimeout(() => map.invalidateSize(), 400);
+    });
+}
+
+if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+        mainContainer.classList.add('sidebar-collapsed');
         setTimeout(() => map.invalidateSize(), 400);
     });
 }
@@ -173,6 +189,10 @@ if (sidebar) {
 
             const wasExpanded = sidebar.classList.contains('expanded');
             sidebar.classList.toggle('expanded');
+
+            // Toggle body class for zoom controls positioning
+            document.body.classList.toggle('sidebar-expanded', !wasExpanded);
+
             console.log('Toggled sidebar, now expanded:', !wasExpanded);
 
             setTimeout(() => map.invalidateSize(), 400);
@@ -191,8 +211,13 @@ if (sidebar) {
             // Only trigger if it was a quick tap (not a long press or scroll)
             if (touchDuration < 300 && isMobile()) {
                 e.preventDefault();
+                const wasExpanded = sidebar.classList.contains('expanded');
                 sidebar.classList.toggle('expanded');
-                console.log('Touch toggle, expanded:', sidebar.classList.contains('expanded'));
+
+                // Toggle body class for zoom controls positioning
+                document.body.classList.toggle('sidebar-expanded', !wasExpanded);
+
+                console.log('Touch toggle, expanded:', !wasExpanded);
                 setTimeout(() => map.invalidateSize(), 400);
             }
         });

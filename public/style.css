@@ -126,43 +126,73 @@ main {
     box-sizing: content-box !important;
 }
 
-/* Header Controls */
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+/* Custom Leaflet Zoom Controls */
+.leaflet-control-zoom {
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 8px !important;
+    overflow: hidden;
 }
 
-#sidebar-toggle {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-    border: 1px solid rgba(102, 126, 234, 0.2);
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
+.leaflet-control-zoom a {
+    background: white !important;
+    color: var(--text-primary) !important;
+    border: none !important;
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    font-size: 20px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: #f8f9fa !important;
+    color: #667eea !important;
+}
+
+.leaflet-control-zoom a:first-child {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Floating Hamburger Button (shown when sidebar closed) */
+.floating-toggle {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    width: 44px;
+    height: 44px;
     padding: 0;
-    border-radius: 10px;
+    border-radius: 8px;
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    z-index: 600;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
 }
 
-#sidebar-toggle:hover {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+.floating-toggle:hover {
+    background: #f8f9fa;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-#sidebar-toggle:active {
-    transform: scale(0.95);
+/* Show floating button when sidebar is collapsed */
+main.sidebar-collapsed .floating-toggle {
+    opacity: 1;
+    pointer-events: auto;
 }
 
-/* Animated Hamburger Icon */
+/* Hamburger Icon */
 .hamburger {
-    width: 20px;
-    height: 16px;
+    width: 18px;
+    height: 14px;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -175,38 +205,27 @@ main {
     width: 100%;
     background: var(--text-primary);
     border-radius: 2px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform-origin: center;
 }
 
-/* Active state - Transform to X */
-main.sidebar-collapsed .hamburger span:nth-child(1) {
-    transform: translateY(7px) rotate(45deg);
-}
-
-main.sidebar-collapsed .hamburger span:nth-child(2) {
-    opacity: 0;
-    transform: scaleX(0);
-}
-
-main.sidebar-collapsed .hamburger span:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg);
-}
-
-/* Sidebar */
+/* Sidebar - Left Side on Desktop */
 .sidebar {
     width: 350px;
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
-    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.05);
+    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.05);
+    /* Shadow to the right */
     display: flex;
     flex-direction: column;
     z-index: 2;
-    border-left: 1px solid rgba(255, 255, 255, 0.5);
+    border-right: 1px solid rgba(255, 255, 255, 0.5);
+    /* Border on right */
+
     /* Animation props */
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
         width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
         opacity 0.3s ease;
+    order: -1;
+    /* Place sidebar before map in flex order */
 }
 
 /* Desktop Collapsed State */
@@ -222,12 +241,41 @@ main.sidebar-collapsed .sidebar {
 .sidebar-header {
     padding: 1.5rem;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .sidebar-header h2 {
     font-size: 1.1rem;
     color: var(--text-primary);
     font-weight: 600;
+    margin: 0;
+}
+
+/* Close Button Inside Sidebar Header */
+.close-btn {
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.close-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
+}
+
+.close-btn:active {
+    transform: scale(0.9);
 }
 
 #user-list {
@@ -317,8 +365,9 @@ main.sidebar-collapsed .sidebar {
         display: none;
     }
 
-    /* Hide desktop toggle on mobile */
-    #sidebar-toggle {
+    /* Hide desktop toggle buttons on mobile */
+    .floating-toggle,
+    .close-btn {
         display: none !important;
     }
 
@@ -352,6 +401,8 @@ main.sidebar-collapsed .sidebar {
         backdrop-filter: blur(20px);
         z-index: 100;
         cursor: grab;
+        order: 0;
+        /* Reset order for mobile */
     }
 
     .sidebar:active {
@@ -367,10 +418,11 @@ main.sidebar-collapsed .sidebar {
         padding: 1rem 1.5rem;
         text-align: center;
         cursor: pointer;
-        user-select: none;
-        -webkit-tap-highlight-color: rgba(102, 126, 234, 0.1);
-        transition: background 0.2s;
         position: relative;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        /* Override desktop flex layout */
+        display: block !important;
+        justify-content: unset !important;
     }
 
     .sidebar-header:active {
@@ -413,5 +465,18 @@ main.sidebar-collapsed .sidebar {
         width: 36px;
         height: 36px;
         font-size: 1rem;
+    }
+
+    /* Adjust zoom controls position on mobile */
+    .leaflet-bottom.leaflet-right {
+        bottom: 100px !important;
+        right: 10px !important;
+        transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Class added by JS when sidebar is expanded */
+    body.sidebar-expanded .leaflet-bottom.leaflet-right {
+        bottom: 180px !important;
+        /* Just above the expanded sidebar content */
     }
 }

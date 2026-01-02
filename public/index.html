@@ -15,16 +15,7 @@
 
 <body>
     <header>
-        <div class="header-left">
-            <button id="sidebar-toggle" aria-label="Toggle Menu">
-                <div class="hamburger">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </button>
-            <h1>📍 Family Tracking Monitor</h1>
-        </div>
+        <h1>📍 Family Tracking Monitor</h1>
         <div class="status-bar">
             <span id="connection-status" class="status-indicator disconnected">Disconnected</span>
             <span id="user-count">Active Users: 0</span>
@@ -32,11 +23,26 @@
     </header>
 
     <main>
+        <!-- Floating Hamburger Button (shown when sidebar is closed) -->
+        <button id="sidebar-open" class="floating-toggle" aria-label="Open Menu">
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
+
         <div id="map"></div>
 
         <div class="sidebar">
             <div class="sidebar-header">
                 <h2>Connected Family</h2>
+                <!-- Close Button Inside Header -->
+                <button id="sidebar-close" class="close-btn" aria-label="Close Menu">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
             </div>
             <ul id="user-list">
                 <!-- User items will be added here dynamically -->
