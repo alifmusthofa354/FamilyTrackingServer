@@ -4,9 +4,28 @@ const socket = io();
 // Default view: Indonesia (approximate center)
 const map = L.map('map').setView([-2.5489, 118.0149], 5);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+// Use CartoDB Voyager tiles for a more modern, premium look that matches the UI
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20
 }).addTo(map);
+
+// Robust fix for map rendering issues (grey screen) due to flexbox/layout shifts
+function fixMapSize() {
+    map.invalidateSize();
+}
+
+// Robust fix: Use ResizeObserver to detect container size changes automatically
+const mapElement = document.getElementById('map');
+const resizeObserver = new ResizeObserver(() => {
+    map.invalidateSize();
+});
+resizeObserver.observe(mapElement);
+
+// Fallback timeouts just in case
+setTimeout(fixMapSize, 500);
+setTimeout(fixMapSize, 2000);
 
 // Store markers: { userId: L.marker }
 const markers = {};
@@ -19,7 +38,7 @@ const localUserData = {};
 socket.on('connect', () => {
     connectionStatus.textContent = 'Connected';
     connectionStatus.classList.remove('disconnected');
-    connectionStatus.classList.add('connected');
+    connectionStatus.classList.add('connected'); // This relies on CSS .status-indicator.connected
     console.log('Connected to server');
 });
 
@@ -69,10 +88,16 @@ function renderUserList() {
     users.forEach(user => {
         const li = document.createElement('li');
         li.className = 'user-item';
+        // Get initial from name for avatar
+        const initial = user.name ? user.name.charAt(0).toUpperCase() : '?';
+
         li.innerHTML = `
-            <h3>${user.name}</h3>
-            <p>Lat: ${user.lat.toFixed(4)}, Lng: ${user.lng.toFixed(4)}</p>
-            <p style="font-size:0.75rem; margin-top:0.25rem;">${new Date(user.timestamp).toLocaleTimeString()}</p>
+            <div class="user-avatar">${initial}</div>
+            <div class="user-info">
+                <h3>${user.name}</h3>
+                <p>Lat: ${user.lat.toFixed(4)}, Lng: ${user.lng.toFixed(4)}</p>
+                <p style="font-size:0.7rem; opacity:0.8; margin-top:2px;">Last seen: ${new Date(user.timestamp).toLocaleTimeString()}</p>
+            </div>
         `;
         li.onclick = () => {
             // Fly to location when clicked in list
@@ -119,4 +144,17 @@ socket.on('user-disconnected', (userId) => {
         removeMarker(userId);
         renderUserList();
     }
+});
+
+// UI Interactions
+const toggleBtn = document.getElementById('sidebar-toggle');
+const mainContainer = document.querySelector('main');
+
+toggleBtn.addEventListener('click', () => {
+    mainContainer.classList.toggle('sidebar-collapsed');
+
+    // Wait for transition to finish then resize map
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 300);
 });
