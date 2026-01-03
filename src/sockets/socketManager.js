@@ -5,7 +5,9 @@ module.exports = (server) => {
     const io = new Server(server, {
         cors: {
             origin: "*",
-            methods: ["GET", "POST"]
+            methods: ["GET", "POST"],
+            allowedHeaders: ["my-custom-header", "ngrok-skip-browser-warning"],
+            credentials: true
         }
     });
 
