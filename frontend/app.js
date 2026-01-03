@@ -1,4 +1,6 @@
-const socket = io();
+// Replace with your Backend Server URL
+const BACKEND_URL = 'http://localhost:3000';
+const socket = io(BACKEND_URL);
 
 // Initialize Map
 // Default view: Indonesia (approximate center)

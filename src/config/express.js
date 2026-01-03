@@ -8,6 +8,6 @@ module.exports = (app) => {
     app.use(express.json());
 
     // Static Files
-    // Note: Assuming 'public' is in the root project folder
-    app.use(express.static(path.join(__dirname, '../../public')));
+    // Disabled: Serving UI from a separate frontend server
+    // app.use(express.static(path.join(__dirname, '../../public')));
 };
