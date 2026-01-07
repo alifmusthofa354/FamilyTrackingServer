@@ -11,6 +11,7 @@ expressConfig(app);
 
 // Routes
 app.use('/api/auth', require('./src/routes/authRoutes'));
+app.use('/api/users', require('./src/routes/userRoutes'));
 
 // 2. Setup Socket.io
 socketManager(server);
