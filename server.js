@@ -9,6 +9,9 @@ const server = http.createServer(app);
 // 1. Setup Express
 expressConfig(app);
 
+// Routes
+app.use('/api/auth', require('./src/routes/authRoutes'));
+
 // 2. Setup Socket.io
 socketManager(server);
 
