@@ -1,5 +1,7 @@
+const userService = require('./userService');
+
 // In-memory storage for connected users
-// Structure: { userId: { id, name, lat, lng, timestamp, socketId } }
+// Structure: { userId: { id, name, lat, lng, timestamp, socketId, profilePicturePath } }
 let users = {};
 
 class SocketService {
@@ -24,18 +26,39 @@ class SocketService {
         socket.on('disconnect', () => this.handleDisconnect(socket));
     }
 
-    handleLocationUpdate(socket, data) {
-        const { id, name, lat, lng } = data;
+    async handleLocationUpdate(socket, data) {
+        const { id, name, lat, lng, profilePicturePath } = data; // Accept path from client if available
 
-        // Update or add user data
-        users[id] = {
-            id,
-            name,
-            lat,
-            lng,
-            timestamp: Date.now(),
-            socketId: socket.id
-        };
+        // Initialize user object if not exists
+        if (!users[id]) {
+            users[id] = { id, name, lat, lng, timestamp: Date.now(), socketId: socket.id };
+
+            // Fetch profile picture from DB if not provided by client
+            if (!profilePicturePath) {
+                try {
+                    // We assume 'id' matches the DB UUID. 
+                    // Note: If 'id' from android is just a random string and not the UUID, this will fail.
+                    // But if it is the UUID, this works.
+                    // We need a way to get the user based on 'id' if 'id' is the uuid.
+                    const user = await userService.getUserById(id);
+                    if (user && user.profilePicturePath) {
+                        users[id].profilePicturePath = user.profilePicturePath;
+                    }
+                } catch (err) {
+                    // User not found in DB or ID mismatch, ignore
+                }
+            } else {
+                users[id].profilePicturePath = profilePicturePath;
+            }
+        } else {
+            // Update existing
+            users[id].lat = lat;
+            users[id].lng = lng;
+            users[id].timestamp = Date.now();
+            users[id].socketId = socket.id;
+            if (profilePicturePath) users[id].profilePicturePath = profilePicturePath;
+            // If already cached from DB, it persists
+        }
 
         console.log(`Location update from ${name} (${id}): [${lat}, ${lng}]`);
 
