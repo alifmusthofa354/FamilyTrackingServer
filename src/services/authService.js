@@ -45,7 +45,7 @@ exports.loginUser = async (email, password) => {
     // 1. Find user
     const { data: user, error } = await supabase
         .from(TABLE_NAME)
-        .select('*')
+        .select('id, name, email, password, profilePicturePath')
         .eq('email', email)
         .single();
 

@@ -7,7 +7,7 @@ const TABLE_NAME = 'users';
 exports.getUserById = async (id) => {
     const { data: user, error } = await supabase
         .from(TABLE_NAME)
-        .select('id, name, email, created_at') // Don't return password
+        .select('id, name, email, created_at, profilePicturePath') // Added profilePicturePath
         .eq('id', id)
         .single();
 
@@ -59,7 +59,6 @@ exports.deleteUser = async (id) => {
 // Upload Profile Picture
 exports.uploadProfilePicture = async (userId, file) => {
     // 0. Check for existing profile picture to delete
-    console.log("nana")
     try {
         const { data: user } = await supabase
             .from(TABLE_NAME)
@@ -73,9 +72,6 @@ exports.uploadProfilePicture = async (userId, file) => {
             const oldUrl = user.profilePicturePath;
             const urlParts = oldUrl.split('/');
             const oldFileName = urlParts[urlParts.length - 1];
-
-            console.log('DEBUG DELETE - Old URL:', oldUrl);
-            console.log('DEBUG DELETE - Extracted Filename:', oldFileName);
 
             if (oldFileName) {
                 const { error: deleteError } = await supabase
