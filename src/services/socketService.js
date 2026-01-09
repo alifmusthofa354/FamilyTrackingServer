@@ -27,42 +27,53 @@ class SocketService {
     }
 
     async handleLocationUpdate(socket, data) {
-        const { id, name, lat, lng, profilePicturePath } = data; // Accept path from client if available
+        const { id, name, lat, lng, profilePicturePath } = data;
 
-        // Initialize user object if not exists
+        if (!id || !name) return;
+
+        // Check if user exists in memory
         if (!users[id]) {
-            users[id] = { id, name, lat, lng, timestamp: Date.now(), socketId: socket.id };
+            // NEW USER: Create initial record
+            users[id] = {
+                id,
+                name,
+                lat,
+                lng,
+                socketId: socket.id,
+                timestamp: Date.now(),
+                profilePicturePath: profilePicturePath || null
+            };
 
-            // Fetch profile picture from DB if not provided by client
+            // SELF-CORRECTION: If no photo provided by client, try fetching from Database
             if (!profilePicturePath) {
                 try {
-                    // We assume 'id' matches the DB UUID. 
-                    // Note: If 'id' from android is just a random string and not the UUID, this will fail.
-                    // But if it is the UUID, this works.
-                    // We need a way to get the user based on 'id' if 'id' is the uuid.
                     const user = await userService.getUserById(id);
                     if (user && user.profilePicturePath) {
                         users[id].profilePicturePath = user.profilePicturePath;
+                        // Broadcast once more after DB fetch succeeds
+                        if (this.io) this.io.emit('receive-location', users[id]);
                     }
                 } catch (err) {
-                    // User not found in DB or ID mismatch, ignore
+                    console.error(`DB fetch failed for ${id}:`, err.message);
                 }
-            } else {
-                users[id].profilePicturePath = profilePicturePath;
             }
         } else {
-            // Update existing
+            // EXISTING USER: Update essential location data
             users[id].lat = lat;
             users[id].lng = lng;
             users[id].timestamp = Date.now();
             users[id].socketId = socket.id;
-            if (profilePicturePath) users[id].profilePicturePath = profilePicturePath;
-            // If already cached from DB, it persists
+            
+            // SMART SYNC: Only update photo if client sends a new value (non-empty)
+            // If client sends null/undefined, we keep the previous photo in memory
+            if (profilePicturePath) {
+                users[id].profilePicturePath = profilePicturePath;
+            }
         }
 
-        console.log(`Location update from ${name} (${id}): [${lat}, ${lng}]`);
+        console.log(`Loc from ${name}: [${lat}, ${lng}]`);
 
-        // Broadcast to all clients
+        // Broadcast the full user object (with photo) to all clients
         if (this.io) {
             this.io.emit('receive-location', users[id]);
         }
@@ -75,7 +86,7 @@ class SocketService {
         const userId = Object.keys(users).find(key => users[key].socketId === socket.id);
 
         if (userId) {
-            console.log(`User ${users[userId].name} (${userId}) went offline.`);
+            console.log(`User ${users[userId].name} offline.`);
             delete users[userId];
 
             // Notify clients
